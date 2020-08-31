@@ -1,2 +1,2 @@
 # lbag-online
-Resources for LBAG Online Events
+This repo contains resources (datasets, worked examples) for LBAG Online Event.
