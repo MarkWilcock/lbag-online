@@ -1,0 +1,234 @@
+---
+title: "ONS COVID Infection Survey - Example Solution"
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r echo = FALSE}
+library(tidyverse)
+
+## ggplot2 extension packages
+library(ggthemes)
+library(ggalt)
+```
+
+## ONS COVID Infection Survey Dataset
+This data shows the daily COVID infection rate over a recent few weeks in each of none English Regions. The central estimate and 95% credible upper and lower bounds are given.  This data is updated frequently  on the [ONS website Coronavirus (COVID-19) Infection Survey page](https://www.ons.gov.uk/peoplepopulationandcommunity/healthandsocialcare/conditionsanddiseases/bulletins/coronaviruscovid19infectionsurveypilot/19february2021).
+
+```{r}
+covid_url <-
+  "https://raw.githubusercontent.com/MarkWilcock/R-Course/main/Datasets/Covid%20Infection%20Survey.csv"
+covid_df <- read_csv(covid_url)
+head(covid_df)
+```
+
+Let's reshape this dataset.
+
+```{r}
+covid_tidy <-
+  covid_df %>%
+  gather(key = "RegionMeasure", value = "Rate",-Date) %>%
+  separate(RegionMeasure, c("Region", "Measure"), sep = "-")
+
+covid_tidy
+```
+
+
+*Exercise*
+Create a line chart to see how the COVID infection rate changes over time for each region
+```{r}
+covid_tidy_central <- covid_tidy %>% filter(Measure == "Central") %>% select(-Measure)
+
+ggplot(covid_tidy_central,
+       aes(x = Date, y = Rate, col = Region)) +
+  geom_line()
+```
+
+*Exercise* 
+Create a line chart that shows just the London Region - the value and the upper and lower bounds
+
+We need these dataset for the next exercise
+```{r}
+covid_average_by_region <-
+covid_tidy_central %>% 
+  group_by(Region) %>% 
+  summarise(AverageRate = mean(Rate))
+```
+
+
+*Exercise* 
+Create a column chart that shows the average rate over the period by region
+```{r}
+ggplot(
+covid_average_by_region,
+aes(x=Region, y=AverageRate)) + 
+  geom_col()
+```
+*Exercise* - make this chart more appealing
+```{r}
+library(scales) # required for the labels = percent
+ggplot(covid_average_by_region,
+       aes(x = Region, y = AverageRate)) +
+  geom_col() +
+  coord_flip() +
+  theme_minimal() +
+  scale_x_discrete(NULL) +
+  scale_y_continuous("Average Rate In the Period", labels=percent)
+```
+*Exercise* Create a bar chart to show expected lifespan of women born in 2010 born by country.
+
+
+
+## Scatter Plot (geom_point())
+Scatter plots compare items across two continuous axes
+
+
+# Small multiples
+
+Let's look at the infection rate in each region
+
+```{r}
+ggplot(covid_tidy_central,
+       aes(x = Date, y = Rate)) +
+  geom_line() +
+  facet_wrap( ~ Region)
+```
+
+With small multiples we can put more details on to each chart e.g. the upper and lower bands as well as a central band
+
+**Exercise**: Create a small multiple chart of each region where each chart shows the central, upper and lower bands
+
+
+
+## Improve the look and effectiveness of our charts
+
+
+```{r}
+ggplot(covid_tidy_central,
+       aes(x = Date, y = Rate, col = Region)) +
+  geom_line() +
+  ggtitle(
+    "The percentage of people testing positive has decreased in all regions in the week ending 12 February 2021", 
+    "Estimated percentage of the population testing positive for the coronavirus (COVID-19) on nose and throat swabs, daily, by region since 2 January 2021, England")
+
+```
+labs() is possibly a better alternative since we can label title, axes and *captions* in one fell swoop.
+```{r}
+ggplot(covid_tidy_central,
+       aes(x = Date, y = Rate, col = Region)) +
+  geom_line() +
+  labs(
+    title = "COVID Rate decreased in all regions", 
+    subtitle  = "Percentage of the population testing positive", 
+    caption = "Source: https://www.ons.gov.uk/peoplepopulationandcommunity/"
+  )
+```
+
+
+
+```{r}
+ggplot(covid_tidy_central,
+       aes(x = Date, y = Rate, col = Region)) +
+  geom_line() +
+  ggtitle(
+    "COVID Rate decreased in all regions", 
+    "Percentage of the population testing positive") +
+  xlab("Date (Daily Measurements") +
+  ylab("Estimated Infection Rate")
+```
+
+
+```{r}
+ggplot(covid_tidy_central,
+       aes(x = Date, y = Rate, col = Region)) +
+  geom_line() +
+  #theme(legend.position = "bottom") +
+  scale_color_discrete (guide = guide_legend(title = "English Region"))
+
+```
+*Exercise* Move the legend to the bottom of the chart
+
+```{r}
+ggplot(covid_tidy_central,
+       aes(x = Date, y = Rate, col = Region)) +
+  geom_line() +
+  scale_x_date ("Date Axis", date_labels = "%b %y") +
+  scale_y_continuous("Infection Rate", limits = c(0, 0.04), labels = scales::percent)
+```
+
+## Reference Lines, Annotations and Labels
+
+
+```{r}
+(covid_tidy_central_london <-
+  covid_tidy_central %>% filter(Region == "London") %>%  
+  select(-Region)
+)
+```
+
+```{r}
+ggplot(covid_tidy_central_london    ,
+       aes(x = Date, y = Rate)) +
+  geom_line() +
+  geom_hline(yintercept = 0.02, col="red", linetype="dashed") +
+  annotate("text", x = min(covid_tidy_central_london$Date), y = 0.02, label = "Lockdown Level", vjust = -0.5, hjust = 0)
+
+```
+
+
+
+Try out different themes.  Use the auto-complete and documentation to see the themes available.  Which do you prefer?
+```{r}
+ggplot(covid_tidy_central,
+       aes(x = Date, y = Rate, col = Region)) +
+  geom_line() +
+  ggtitle(
+    "COVID Rate decreased in all regions", 
+    "Percentage of the population testing positive") +
+  xlab("Date (Daily Measurements") +
+  ylab("Estimated Infection Rate") +
+  theme_light()
+
+```
+
+
+```{r}
+ggplot(covid_tidy_central,
+       aes(x = Date, y = Rate, col = Region)) +
+  geom_line() +
+  ggtitle(
+    "COVID Rate decreased in all regions", 
+    "Percentage of the population testing positive") +
+  xlab("Date (Daily Measurements") +
+  ylab("Estimated Infection Rate") +
+  theme_light() +
+  theme(plot.background = element_rect(fill="yellow"))
+```
+*Exercise* Build a chart with a minimal themes apart from a green panel background
+
+
+```{r}
+ggplot(covid_tidy_central,
+       aes(x = Date, y = Rate, col = Region)) +
+  geom_line() +
+  ggtitle(
+    "COVID Rate decreased in all regions", 
+    "Percentage of the population testing positive") +
+  xlab("Date (Daily Measurements") +
+  ylab("Estimated Infection Rate") +
+  theme_economist()
+  
+```
+
+
+
+**Exercise**: Create a small multiple chart of each region where each chart shows the central, upper and lower bands
+
+```{r}
+#  Exercise answer
+ggplot(covid_tidy,
+       aes(x = Date, y = Rate, col = Measure)) +
+  geom_line() +
+  facet_wrap( ~ Region)
+```

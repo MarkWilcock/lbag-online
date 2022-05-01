@@ -1,0 +1,32 @@
+Question_ID,QuestionText,Category_ID,Category,FormPage
+Q1_ents,Netflix use customers' viewing habits to create new shows,ents,Entertainment,1
+Q2_misc,Food banks will access government data to know who might need food,misc,Misc,1
+Q3_crime,The police will be able to track anybody using their mobile phone location,crime,Crime,1
+Q4_health,Health services will sell medical records to drugs companies to find new medicines,health,Health,1
+Q5_bus_econ,"Post-Brexit, the UK Government should opt Britain out of GDPR to help businesses use their data more freely and innovatively without living in fear of punitive fines, or bearing the significant administrative costs of privacy admin that makes advanced analytics and data science less viable.",bus_econ,Business and the Economy,2
+Q6_bus_econ,The government will sell our data to companies to help fund public services.,bus_econ,Business and the Economy,2
+Q7_health,Everyone's DNA data will be available to find donors for transplants,health,Health,2
+Q8_edu,Teachers will have access to their students' Facebook posts to check for bullying,edu,Education and Child Welfare,2
+Q9_transp,All phones will be tracked through stations and airports to improve journeys.,transp,Transport,2
+Q10_health,"The NHS needs to use medical records of patients that tested postive for COVID-19 in order to work with pharmaceutical companies to understand the disease and develop a vaccine. To gather the biggest sample and best possible data, it assumes patient opt-in whilst also allowing them to opt-out by requesting to do so and signing a form. This a fair and correct approach because the purpose is in the public interest and people have been given the chance to opt out if they wish.",health,Health,3
+Q11_bus_econ,Companies should be free to use data given to them for any purpose.,bus_econ,Business and the Economy,4
+Q12_edu,Toys that record children will be used to understand how children learn.,edu,Education and Child Welfare,4
+Q13_ents,Cameras will track popcorn consumption to find the most exciting parts of films.,ents,Entertainment,4
+Q14_health,Medical records will be used to notify people who are eligible for clinical trials.,health,Health,4
+Q15_misc,Political parties will use social media to find undecided voters.,misc,Misc,4
+Q16_misc,"Having to remember and type in a password with 8 characters and a special character, then input a code sent via SMS, just to do mundane tasks such as online banking is annoying, and security-limiting because the complexity makes people pick the same passwords for all websites. It can therefore be said that the e-privacy imperative has gone overboard and less stringent measures should be considered for the benefit of users in all demographics, especially older users.",misc,Misc,5
+Q17_health,Everyone's Fitbit data will go straight to their doctor,health,Health,6
+Q18_crime,Encrypted messages will be banned to help governments detect security threats,crime,Crime,6
+Q19_bus_econ,Data from apps will be used to target advertisements at phone users,bus_econ,Business and the Economy,6
+Q20_health,Health inspectors will use social media complaints to find unhygienic restaurants,health,Health,6
+Q21_bus_econ,Survey companies will use energy data to know when you will be at home,bus_econ,Business and the Economy,6
+Q22_transp,Car insurance companies will see all data from their customers’ cars,transp,Transport,6
+Q23_ents,To-do lists on phones will be analysed to see what products different people need,ents,Entertainment,7
+Q24_bus_econ,Companies will be able to buy and sell data without restrictions,bus_econ,Business and the Economy,7
+Q25_ents,Facial detection will be used to know the average age and gender of people in bars,ents,Entertainment,7
+Q26_crime,Crime reports will be used to create maps of which streets are safe,crime,Crime,7
+Q27_bus_econ,Free apps will sell user data to make money,bus_econ,Business and the Economy,7
+Q28_health,"An events company is hosting a research and technology exhibition for health sector professionals. To market the event, the company uses LinkedIn profiles and 'Meet the Team' pages on NHS and pharmaceutucal company websites to build a database of those likely to be interested based on their job roles. The events company then uses name, surname and email address pattern to guess a likely email address for each contact they research, and use these emails to promote the event, offering  the option to be removed from the mailing list if not interested. This is fair because the event directly relevant to the work of the people being marketed to like this, they can opt-out if they want to, and the events industry in general is a legitimate and useful part of the UK ecnomomy which relies on this practice to be viable.",health,Health,8
+Q29_health,Health insurance companies will offer discounted premiums for users that wear Fitbits or share data with them from fitness smartphone apps.,health,Health,9
+Q30_misc,Companies will use sentiment analysis on their employees emails' to detect and remedy threatening tone and behaviour and to identify disgruntled employees who may wish to change jobs,misc,Misc,9
+Q31_crime,The police should be able to use facial recognition technology in combimnation with the Police National Database in order to monitor suspects,crime,Crime,9

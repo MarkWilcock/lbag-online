@@ -1,0 +1,576 @@
+---
+title: "Visualising Data With ggplot2"
+output:
+  html_document:
+    df_print: paged
+---
+
+# Getting Started - Setup
+
+```{r echo = FALSE}
+# ggplot2 is part of the tidyverse 
+library(tidyverse)
+
+# useful for formatting axes
+library(scales)
+
+# These packages contains datasets that we will visuals
+library(datasauRus)
+library(nycflights13)
+
+```
+# Introducing the datasets in this session
+
+Apart from a COVID Cases dataset, we'll use in-built datasets in R packages to show our examples. These include
+
+* *datasaurus_dozen* - 13 datasets with the same summary stats - but are they the same?
+* *faithful* - frequency and strength of eruptions of the Yellowstone geyser
+* *diamonds* - cut clarity and price of a set of diamonds
+* *mtcars* - make model and stopping distance
+* *flights* - flights departing New York City airports in 2013, from nycflights13 package
+
+In this session, we use datasets that are in-built into R or one of the packages above to show a single aspect.  
+In the group exercise we'll use real world topical datasets and use all aspects of ggplot2 to build a complete visualizations
+
+```{r}
+# 150 observations species three species of iris
+?iris # use the ? to show the Help for this dataset
+iris
+
+# a set of 13 (not 12) datasets with the same summary statistics
+datasaurus_dozen
+
+# Performance (make model and stopping distance) of 32 cars from the 1970's  
+mtcars
+
+# ggplot2 provides the diamonds data set: price, cut, carat and other details of over 50,000 diamonds
+diamonds
+
+# Flights departing New York City airports in 2013, from nycflights13 package
+flights 
+
+#  ggplot2 provide the mpg dataset - fuel economy of 38 cars
+mpg
+
+# dplyr provide the starwars dataset, 87 characters for the series
+starwars
+```
+
+
+Let's look at the datasaurus dozen's summary stats
+```{r}
+datasaurus_dozen %>%
+  group_by(dataset) %>%
+  summarize(
+    mean_x    = mean(x),
+    mean_y    = mean(y),
+    std_dev_x = sd(x),
+    std_dev_y = sd(y),
+    corr_x_y  = cor(x, y)
+  )
+```
+
+```{r}
+covid_url <-
+  "https://raw.githubusercontent.com/MarkWilcock/R-Course/main/Datasets/covid_cases_data.csv"
+covid <- read_csv(covid_url)
+head(covid)
+```
+
+
+
+# Recap of ggplot2 fundamentals
+
+ggplot2 is an intrinsic part of the tidyverse - best used with other tidyverse packages
+
+## Grammar of Graphics
+The Grammar of Graphics is a key strength of ggplot2 allowing us to tailor a chart exactly to requirements
+
+* data - provide a dataset as a (tidyverse) tibble
+* geometries (geoms) are the basic configuration of the chart e.g. geom_line(), geom_col()
+* aesthetics map visual attributes (x, y, colour, shape, fill, alpha) to dataset columns.  
+* scales configure the axes and set range, limits on visual attributes.  By default, gpplot2 sets a default scale
+* stats summarize the data before plotting, most obviuosly in box plots, geom_box() but also in geom_bar()
+
+We can have several geoms layered on a single chart e.g. line of best fit and underlying data points
+
+The most common geoms are for line, column/bar chart, scatter plot, histograms and box and whisker charts.  We'll look at an example of each.
+
+Variables can be *discrete* or *continuous*.
+Use aesthetics to map categories to colour or shape of the points.
+
+Let's create a few examples of charts using different geoms.
+
+## Line charts (geom_line())
+
+Line charts often show changes over time.
+
+Let's see how daily COVID cases change over the last year in each country
+```{r}
+ggplot(data = covid,
+       mapping = aes(x = Date, y = DailyCases, col = Country)) +
+  geom_line()
+```
+
+*Exercise* 
+Create a line chart that shows just the England cases
+
+## Column / Bar Chart 
+Column charts often compare values across a set of discrete categories.
+
+```{r}
+covid_by_country <-
+covid %>% 
+  group_by(Country) %>% 
+  summarise(Cases = sum(DailyCases))
+
+covid_by_country
+```
+
+```{r}
+ggplot(data = covid_by_country,
+       mapping = aes(x = Country, y = Cases)) +
+  geom_col()
+```
+co_ord_flip() changes a column chart to a "bar" chart.
+```{r}
+ggplot(data = covid_by_country,
+       mapping = aes(x = Country, y = Cases)) +
+  geom_col() +
+  coord_flip()
+```
+Something strange is going on below in geom_bar() that did not happen with geom_col.  What is it?
+```{r}
+ggplot(data = flights,
+       mapping = aes(x = origin)) +
+  geom_bar()
+```
+Let's do it the long way
+```{r}
+ggplot(
+  data = flights %>%  group_by(origin) %>% summarise(TheCount = n()),
+  mapping = aes(x = origin, y = TheCount)
+) +
+  geom_col()
+
+ggplot(
+  data = flights %>%  group_by(origin) %>% summarise(TheCount = n()),
+  mapping = aes(x = origin, y = TheCount)
+) +
+  geom_bar(stat = "identity") 
+
+```
+*Exercise* Create a line chart to show total cases across the four countries by date.
+Hint: We have just grouped  the data by Country summing the DailyCases.  
+You may want to do something similar but grouping by Date.
+
+
+```{r}
+#  Example answer
+ggplot(
+  data = covid %>%
+    group_by(Date) %>%
+    summarise(Cases = sum(DailyCases)),
+  mapping = aes(x = Date, y = Cases)
+) +
+  geom_line() 
+```
+## Scatter Plot (geom_point())
+Scatter plots compare items across two continuous axes
+
+Let's compare the widths of the petals and sepals of the iris flowers
+
+```{r}
+ggplot(data = iris,
+       mapping = aes(x = Petal.Length, y = Sepal.Length)) +
+  geom_point()
+```
+*Exercise* 
+Differentiate the species by colour.  An then by  shape.  And try mapping to alpha and size.  What warnings do we get and why?
+
+```{r}
+# Example answer
+ggplot(data = iris,
+       mapping = aes(x = Petal.Length, y = Sepal.Length, col = Species)) +
+  geom_point()
+```
+
+
+*Exercise* Add a second layer with geom_smooth() to draw a best-fit curve, firstly with then without the confidence intervals.
+```{r}
+# Example answer
+ggplot(data = iris,
+       mapping = aes(x = Petal.Length, y = Sepal.Length, col = Species)) +
+  geom_point() +
+  geom_smooth(se = FALSE)
+```
+
+## Box plot 
+Box plots are a visual way of seeing lots of summary statistical data in a single chart.
+Let's look at the distribution of petal lengths by Species.
+
+```{r}
+ggplot(data = iris,
+       mapping = aes(x = Species, y = Petal.Length)) +
+  geom_boxplot()
+```
+*Exercise*
+Build a box plot that compares the distribution of Sepal.Length by Species
+
+
+# Small multiples
+Small multiple (trellis) charts show lots of small charts side by side.  Each chart looks at a different aspect and is filtered on a different value of a discrete variable.
+
+Functions
+* facet_wrap - when comparing over one dimension e.g. English region
+* facet_grid - when when comparing over two dimensions e.g. year of birth and gender
+
+Let's look at the COVID Cases with each Country having its own chart
+
+```{r}
+ggplot(data = covid,
+       mapping = aes(x = Date, y = DailyCases)) +
+  geom_line() +
+  facet_wrap( ~ Country)
+```
+*Exercise* Create small multiple scatter charts of the datasarus_dozen data
+where each chart shows one of the values of teh dataset column
+
+```{r}
+#  Example answer
+ggplot(data = datasaurus_dozen,
+       mapping = aes(x = x, y = y)) +
+  geom_point() +
+  facet_wrap( ~ dataset) +
+  xlab(NULL) +
+  ylab(NULL) +
+  ggtitle('The Datasaurus "Dozen"',
+          "Same summary stats, very different visual representation")
+
+
+```
+
+# Improve the look and effectiveness of our charts
+
+## Titles
+Titles put the chart in context and often spell out the message the the chart designer wants to communicate. 
+ggtitle() can show a title and sub-title  - but not a very long one!
+
+```{r}
+# Assign the result of the ggplot() call to a variable to we don't have to repeat so much in subsequent sections
+covid_line_plot <-
+  ggplot(data = covid,
+         mapping = aes(x = Date, y = DailyCases, col = Country)) +
+  geom_line()
+
+covid_line_plot
+```
+
+```{r}
+covid_line_plot +
+  ggtitle(
+    "Cases by date reported, by nation",
+    "Number of individuals who have had at least one positive COVID-19 test result"
+  )
+```
+labs() is possibly a better alternative since we can label title, axes and *captions* in one fell swoop.
+```{r}
+covid_line_plot +
+  labs(title = "Cases by date reported, by nation",
+       subtitle  = "Number of individuals who have had at least one positive COVID-19 test result",
+       caption =  "Source: https://coronavirus.data.gov.uk/details/cases")
+```
+
+
+## Axes
+Axes describe and explain the items on the the horizontal position (x-axis) or vertical position (y-axis)
+
+* xlab(), ylab()
+* xlim(), ylim()
+* labs() - possibly better alternative
+
+## Legends
+
+Functions covered:
+* guide_legend()
+* theme(legend.position = ...)
+* scale_fill_manual(guide=guide_legend(...))
+
+Legends explain the different categories of discrete columns or the range of continuous ones.  ggplot2 provides a legend by default. We can change it position with theme(legend.position= ...)   We can change the look of the legend with guide_legend() 
+
+*More on themes and scales later.*
+
+```{r}
+# Note that we start with the variable covid_line_plot
+covid_line_plot +
+  theme(legend.position = "bottom") +
+  scale_color_discrete (guide = guide_legend(title = "UK Country"))
+```
+*Exercise* Move the legend to the top of the chart
+
+## Scales
+
+Scales set the limits and ranges of the visual attributes.
+
+scale_*() functions such as 
+* scale_x_discrete()
+* scale_y_continuous()
+* scale_fill_manual()
+* scale_colour_discrete()
+* scale_colour_brewer() ???
+
+```{r}
+covid_line_plot +
+  scale_x_date ("Date Axis", date_labels = "%b %y") +
+  scale_y_continuous("Daily Cases", limits = c(0, 60000))
+```
+
+## Reference Lines, Annotations and Labels
+
+Reference lines help set context - what's good and what's not.
+Annotations focus the viewer attention and help tell the story.
+
+This section covers functions:
+* annotate()
+* geom_label()
+* geom_text()
+* geom_hline()
+* geom_vline()
+* geom_abline()
+
+```{r}
+covid_line_plot +
+  geom_hline(yintercept = 40000,
+             col = "red",
+             linetype = "dashed") +
+  annotate(
+    "text",
+    x = min(covid$Date),
+    y = 40000,
+    label = "Lockdown Level",
+    vjust = -0.5,
+    hjust = 0
+  )
+```
+
+*Exercise*
+Add a blue dotted line on March 23rd 2020, the start the first lockdown.  Annotate it. 
+
+```{r}
+covid_line_plot +
+  geom_vline(
+    xintercept = as.Date('2020-03-20'),
+    col = "blue",
+    linetype = "dotted"
+  ) +
+  annotate(
+    "text",
+    x = as.Date('2020-03-20'),
+    y = max(covid$DailyCases),
+    label = "First lockdown starts",
+    vjust = 0.5,
+    hjust = -0.005
+  )
+
+```
+
+
+## Themes
+Themes set the style (colours, fonts, backgrounds) for the chart as a whole in a single function. ggplot2's default theme is rubbish so change it!
+
+Functions covered in this session: 
+* theme()
+
+Try out different themes.  Use the auto-complete and documentation to see the themes available.  Which do you prefer?
+```{r}
+covid_line_plot +
+  theme_light()
+```
+
+
+## Applying Specific Visual Attributes 
+
+Some functions allow us precisely to define visual attributes - perhaps if a theme is not exactly to our liking - or we can use these to modify a theme.
+
+* plot.background()
+* panel.backround()
+* panel.grid.major(), panel.grid.minor()
+* theme() with arguments plot.background, panel.background...
+
+```{r}
+covid_line_plot +
+  theme_light() +
+  theme(panel.background = element_rect(fill="yellow")) 
+
+```
+*Exercise* Build a chart with a minimal themes apart from a green panel background
+
+
+# ggplot2 helper packages
+
+```{r}
+library(ggthemes)
+```
+
+ggplot2 has been so succesful and popular that others have built helper packages to extend its functionality.
+
+## ggthemes
+ggthemes provides out of the box themes - e.g. minimal theme, themes to mimic certain media publications or well known software packages.  
+
+```{r}
+covid_line_plot +
+  theme_economist()
+  
+```
+
+*Exercise* Use the auto-complete to find you favourite theme.
+
+
+## ggalt 
+ggalt provided several geoms including geom_dumbbell() for dumbbell plots.
+
+```{r}
+library(ggalt)
+```
+
+Lets compare the number of cases at the beginning of this year with 2 months later
+For this chart, we need to filter and shape the data with dplyr.
+
+```{r}
+covid_start_end <-
+  covid %>%
+  filter(Date == '2021-01-02'  | Date == '2021-03-02') %>%
+  mutate(Marker  = ifelse(Date == '2021-01-02', 'Start', 'End')) %>%
+  select(Country, Marker, DailyCases) %>%
+  spread(Marker, DailyCases)
+```
+
+
+```{r}
+ggplot(data = covid_start_end,
+       mapping = aes(x = Start, xend = End, y = Country)) +
+  theme_minimal() +
+  geom_dumbbell(
+    colour_x = "grey",
+    colour_xend = "steelblue",
+    size = 1,
+    size_x = 5,
+    size_xend = 5
+  )
+```
+
+## ggrepel reduces overlapping labels. Compare before and after
+```{r}
+# Before
+ggplot(data = mtcars,
+       mapping = aes(x = disp, y = mpg)) +
+  geom_point(colour = "blue", size = 2) +
+  geom_text(label = rownames(mtcars)) +
+  ggtitle("Without ggrepel")
+
+
+library(ggrepel)
+# After
+ggplot(data = mtcars,
+       mapping = aes(x = disp, y = mpg)) +
+  geom_point(colour = "blue", size = 2) +
+  geom_text_repel(label = rownames(mtcars)) +
+  ggtitle("With ggrepel")
+
+```
+
+## gganimate
+gganimate changes plot over time.  Is it an improvement or not?
+The famous example would be Hans Rosling's motion scatter chart - wealth (x) , lifespan (y), 200 years (time), 200 countries  (colour), population (size) 
+
+```{r}
+library(gganimate)
+ggplot(
+  data = filter(covid, Date > as.Date("2021-02-01")),
+  mapping = aes(x = Date, y = DailyCases, col = Country)
+) +
+  geom_line() +
+  theme_classic() +
+  transition_reveal(along = Date)
+
+```
+
+## patchwork
+use patchwork to layout several plots
+
+```{r}
+# Simplest example
+
+library(patchwork)
+
+cars_plot <-
+  ggplot(data = mtcars,
+         mapping = aes(x = disp, y = mpg)) +
+  geom_point(colour = "blue", size = 2) +
+  geom_text_repel(label = rownames(mtcars)) +
+  ggtitle("With ggrepel")
+
+iris_plot <-
+  ggplot(data = iris,
+         mapping = aes(x = Petal.Length, y = Sepal.Length, col = Species)) +
+  geom_point() +
+  geom_smooth(se = FALSE)
+
+cars_plot + iris_plot
+```
+
+# Final Exercise
+
+
+*Putting it all together exercise * Create a stacked bar chart of number of COVID Cases (y-axis)  by date (x-axis) by country (colour) similar to that in https://coronavirus.data.gov.uk/details/cases
+
+* The legend at the bottom
+* The y axis has no title and label every 10,000, with a thousands separator in the format
+* The x axis has no title and values every 2 months starting 1st March 2020 and formatted as dd-mmm.
+* The titles is "Cases by date reported, by nation"
+* Stack the the bars with England on the base. 
+* The official colours of each country are:
+a England	#5694ca
+a Scotland	#003078
+a Northern Ireland	#ffdd00
+a Wales	#d4351c
+
+
+```{r}
+# Example Answer
+
+country_colours <-
+  c(
+    England = "#5694ca",
+    Scotland = "#003078",
+    Wales = "#d4351c",
+    `Northern Ireland` = "#ffdd00"
+  )
+
+ggplot(data = covid,
+       mapping = aes(
+         x = Date,
+         y = DailyCases,
+         fill = fct_rev(Country)
+       )) +
+  geom_col() +
+  scale_fill_manual(values = country_colours, guide = guide_legend(title = NULL)) +
+  theme_light() +
+  ggtitle("Cases by date reported, by nation") +
+  theme(legend.position = "bottom")  +
+  scale_y_continuous(
+    name = NULL,
+    breaks = seq(10000, 70000, 10000),
+    minor_breaks = NULL,
+    labels = comma
+  ) +
+  scale_x_date(
+    name = NULL,
+    breaks = seq(as.Date("2020-03-01"), as.Date("2021-03-01"), by = "2 month"),
+    date_labels = "%d %b"
+  )
+```
+
+
+
+END OF SESSION

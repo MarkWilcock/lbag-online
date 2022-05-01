@@ -1,0 +1,7 @@
+The Wisconsin dataset is on the UCI Machine Learning Repository at 
+https://archive.ics.uci.edu/ml/datasets/Breast+Cancer+Wisconsin+(Diagnostic)
+
+The githib links for the main and holdout datasets used in the demo are
+
+https://raw.githubusercontent.com/MarkWilcock/lbag-online/master/wisconsin/Wisconsin%20Main%20Data.csv
+https://raw.githubusercontent.com/MarkWilcock/lbag-online/master/wisconsin/Wisconsin%20Holdout%20Data.csv

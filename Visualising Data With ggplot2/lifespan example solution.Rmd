@@ -1,0 +1,260 @@
+---
+title: "Lancet Lifespan - Example Solution"
+output: html_notebook
+---
+
+```{r echo = FALSE}
+library(tidyverse)
+library(ggthemes)
+library(ggalt)
+```
+
+This data comes from [a study in The Lancet](https://www.thelancet.com/journals/lancet/article/PIIS0140-6736(16)32381-9/fulltext#seccestitle10), a medical journal, predicting the lifespan of men and women in 25 rich countries.  The results are summarised in [an Economist article](https://www.economist.com/graphic-detail/2017/02/23/longevity-in-rich-countries). 
+
+```{r}
+lifespan_url <-
+  "https://raw.githubusercontent.com/MarkWilcock/R-Course/main/Datasets/Longevity%20Data.csv"
+lifespan_df <- read_csv(lifespan_url)
+head(lifespan_df)
+```
+
+Let's reshape into a tidy format (Region Country, Gender, Year, Lifespan) and remove the confidence interval values.
+This isn't a session on dplyr so we won't go into detail.
+
+```{r}
+lifespan <-
+  lifespan_df %>%
+  gather(key = "GenderYear",
+         value = "Lifespan",
+         `Men 2010`,
+         `Women 2010`,
+         `Men 2030`,
+         `Women 2030`) %>%
+  separate(GenderYear, c("Gender", "Year")) %>%
+  mutate(Lifespan = as.numeric(str_sub(Lifespan, 1, 4)))
+head(lifespan_tidy)  
+```
+
+
+For our first charts we'll focus on 2010 births
+
+```{r}
+lifespan_2010 <-
+  lifespan %>% 
+  filter(Year == 2010) %>% 
+  select (-Year)
+
+lifespan_2010_women <-
+  lifespan_2010 %>% 
+  filter(Gender == 'Women') %>% 
+  select (-Gender)
+
+```
+
+*Exercise* Create bar chart to show expected lifespan of women born in 2010 born by country.
+```{r}
+ggplot(lifespan_2010_women,
+       aes(x = Country, y = Lifespan)) +
+  geom_col() +
+  coord_flip()
+```
+
+*Exercise* Improve the chart, 
+* perhaps use points rather than bars 
+* order the countries by Lifespan so we get the values ordered from high to low
+* provide a better theme
+* start the Lifespan axis at a more appropriate value 
+* give it a title and subtitle
+* remove the label on the Country axis 
+
+
+```{r}
+ggplot(lifespan_2010_women,
+       aes(x = fct_reorder(Country, Lifespan), y = Lifespan)) +
+  geom_point(col = "steelblue") +
+  coord_flip() +
+  theme_minimal() +
+  labs(title="Expected lifespan of women born in 2010 by Country") +
+  scale_x_discrete(NULL)
+```
+
+Lets compare the lifespan of men and women born in 2010 by country.
+We need to reshape our dataset to have a Men and Women columns.
+```{r}
+lifespan_2010_reshape <-
+  lifespan_2010  %>% 
+  spread(Gender, Lifespan)
+lifespan_2010_reshape
+```
+
+*Exercise* 
+Create a scatter plot showing both men and women in 2010 and 2030
+Use colour to distinguish between 2010 and 2030 births
+Use a scale for your colours
+
+```{r}
+ggplot(
+  data = lifespan %>% spread(Gender, Lifespan),
+       aes(x = Women, y = Men, col = Year)) +
+  geom_point( size = 3) +
+  scale_fill_brewer(type="seq", palette="Set3")
+```
+
+
+*Exercise* 
+Improve the scatter plot of lifespan of women (x-axis) vs men (y-axis) born in 2010
+* add a horizontal reference line to show the median lifespan for men.  Annotate it.
+* add a vertical reference line to show the median lifespan for women.  Annotate it.
+* (optional) add a reference line to show the where men's lifespan equals women's lifespan. What do the  areas below and above the line signify?  What does the data tell us?
+
+```{r}
+lifespan_2010_reshape <- lifespan %>%  filter(Year == 2010) %>% spread(Gender, Lifespan)
+
+ggplot(
+  data = lifespan_2010_reshape,
+       aes(x = Women, y = Men, col = Year)) +
+  geom_point( size = 3) +
+  scale_x_continuous(name="Women's Lifespan", limits = c(70, 90)) +
+  scale_y_continuous(name="Men's Lifespan", limits = c(70, 90)) +
+  geom_hline(yintercept = mean(lifespan_2010_reshape$Men), col="blue", linetype=2) +
+  geom_vline(xintercept = mean(lifespan_2010_reshape$Women), col="blue", linetype=2)  +
+  geom_abline(slope = 1, intercept = 0)
+```
+
+
+For the next chart, we *don't* want the data 100% tidy.  We want to pivot so that we have a 2010 and 2030 column
+
+```{r}
+lifespan_change <-
+lifespan %>% 
+  spread(Year, Lifespan) %>% 
+  mutate(Change = `2030` - `2010`)
+
+lifespan_change_women <-
+  lifespan_change %>% 
+  filter(Gender=="Women") 
+
+lifespan_change_women
+```
+
+*Exercise* 
+Create a dumbbell plot, using geom_dumbbell() from the ggalt package.
+
+Arrange these countries in ascending order of lifespan for 2010 women births
+Hint:
+```{r}
+lifespan_change_women <-
+  lifespan_change_women %>%
+  mutate(CountryF = fct_reorder(Country, `2010`))
+
+print(str(lifespan_change_women$Country)) # a character vector in alphabetical order
+print(str(lifespan_change_women$CountryF)) # a factor ordered by 2010 Lifespan
+```
+
+
+```{r}
+ggplot(lifespan_change_women,
+       aes(
+         x = `2010`,
+         xend = `2030`,
+         y = fct_reorder(Country, `2010`)
+       )) +
+  geom_dumbbell(
+    colour_x = "steelblue",
+    colour_xend = "steelblue",
+    size = 1,
+    size_x = 5,
+    size_xend = 5
+  ) 
+```
+
+*Exercise*
+
+```{r}
+ggplot(lifespan_change_women,
+       aes(
+         x = `2010`,
+         xend = `2030`,
+         y = CountryF
+       )) +
+  geom_dumbbell(
+    colour_x = "steelblue",
+    colour_xend = "steelblue",
+    size = 1,
+    size_x = 5,
+    size_xend = 5
+  )
+
+```
+
+*Exercise*
+
+Improve the chart above to make it more appealing
+Use ggplot capabilities including labels, titles, themes, scales
+
+```{r}
+ggplot(lifespan_change_women,
+       aes(
+         x = `2010`,
+         xend = `2030`,
+         y = fct_reorder(Country, `2010`)
+       )) +
+  geom_dumbbell(
+    colour_x = "steelblue",
+    colour_xend = "steelblue",
+    size = 1,
+    size_x = 5,
+    size_xend = 5
+  ) +
+  theme_minimal() +
+  ggtitle(
+    "Expected lifespan in rich countries",
+    "South Korean women will see the biggest improvements."
+  ) +
+  scale_y_discrete("Country") +
+  scale_x_continuous("Lifespan")
+```
+
+
+For the next chart, you may need the CountryFMen2010 factor variable, created below
+```{r}
+lifespan_change<-
+  lifespan_change %>% 
+  mutate(
+    Men2010 = ifelse(Gender == 'Men', `2010`, NA),
+    CountryFMen2010 =  fct_reorder(Country, Men2010, na.rm = TRUE)
+  ) %>% 
+  select(-Men2010) # we no longer need this so remove it
+
+```
+
+Add faceting to show small multiple charts by region and by gender
+
+```{r}
+  
+ggplot(lifespan_change, aes(
+  x = `2010`,
+  xend = `2030`,
+  y = CountryFMen2010
+)) +
+  geom_dumbbell(
+    colour_x = "steelblue",
+    colour_xend = "steelblue",
+    size = 1,
+    size_x = 5,
+    size_xend = 5
+  ) +
+  theme_minimal() +
+  #theme(panel.background = element_rect(fill="lightyellow")) +
+  facet_grid(Region ~ Gender, scales = "free_y", space = "free_y") +
+  ggtitle(
+    "Expected lifespan in rich countries",
+    "South Korean women will see the biggest improvements."
+  ) +
+  scale_y_discrete("Country") +
+  scale_x_continuous("Lifespan")
+
+```
+
+
+

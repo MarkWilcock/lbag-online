@@ -1,0 +1,7 @@
+These are the colour codes used by the official UK charts to denote each country 
+
+Wales d4351c
+Scotland 003078
+Northern Ireland ffdd00
+England 5694ca
+
